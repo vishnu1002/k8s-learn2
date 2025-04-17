@@ -1,6 +1,6 @@
-import express from 'express';
-import os from 'os';
-import path from 'path';
+const express = require('express');
+const os = require('os');
+const path = require('path');
 
 const app = express();
 const PORT = 3000;
@@ -14,5 +14,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+  console.log(`Homepage service is running at http://localhost:${PORT}`);
 });

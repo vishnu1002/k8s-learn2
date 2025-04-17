@@ -1,0 +1,46 @@
+services:
+  homepage:
+    container_name: homepage
+    build: 
+      context: ./homepage
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./homepage:/app
+      
+  orders:
+    container_name: orders
+    build:
+      context: ./orders
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./orders:/app
+
+  payment:
+    container_name: payment
+    build:
+      context: ./payment
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./payment:/app
+      
+  nginx:
+    container_name: nginx
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - homepage
+      - orders
+      - payment
+
+networks:
+  microservices-network:
+    driver: bridge

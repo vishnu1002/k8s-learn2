@@ -1,9 +1,9 @@
-import express from 'express';
-import os from 'os';
-import path from 'path';
+const express = require('express');
+const os = require('os');
+const path = require('path');
 
 const app = express();
-const PORT = 3002;
+const PORT = 3001;
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(process.cwd()));
@@ -14,5 +14,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Orders service is running at http://localhost:${PORT}`);
+  console.log(`Payment service is running at http://localhost:${PORT}`);
 });
