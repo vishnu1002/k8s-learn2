@@ -16,24 +16,21 @@ graph TD
 
 ### 1. Homepage Service
 
-- **Port**: 3000
-- **Purpose**: Serves the main landing page
 - **Access**: Root path `/`
-- **Technology**: Node.js, Express, EJS
+- **Purpose**: Serves the main landing page
+- **Port**: 3000
 
 ### 2. Payment Service
 
-- **Port**: 3001
-- **Purpose**: Handles payment-related functionality
 - **Access**: `/payment`
-- **Technology**: Node.js, Express, EJS
+- **Purpose**: Handles payment-related functionality
+- **Port**: 3001
 
 ### 3. Orders Service
 
-- **Port**: 3002
-- **Purpose**: Manages order processing
 - **Access**: `/orders`
-- **Technology**: Node.js, Express, EJS
+- **Purpose**: Manages order processing
+- **Port**: 3002
 
 ### 4. Nginx Load Balancer
 
@@ -42,7 +39,6 @@ graph TD
   - Acts as reverse proxy
   - Routes requests to appropriate services
   - Load balancing
-- **Configuration**: Custom nginx.conf for service routing
 
 ## Kubernetes Resources
 
@@ -70,12 +66,3 @@ k8s-learn2/
 └── nginx/            # Nginx configuration
 ```
 
-## Learning Objectives
-
-- Kubernetes deployment configuration
-- Microservices architecture
-- Container orchestration
-- Service discovery
-- Load balancing
-- Reverse proxy setup
-- Resource management in Kubernetes
