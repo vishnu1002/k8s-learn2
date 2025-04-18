@@ -8,7 +8,7 @@ const PORT = 3002;
 app.set('view engine', 'ejs');
 app.set('views', path.join(process.cwd()));
 
-app.get('/', (req, res) => {
+app.get(['/', '/orders'], (req, res) => {
   const hostname = os.hostname();
   res.render('index', { hostname });
 });

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+      - name: payment-service
+        image: vishnu1001/web-payment
+        resources:
+          limits:
+            memory: "64Mi"
+            cpu: "250m"
+        ports:
+        - containerPort: 3001
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+spec:
+  selector:
+    app: payment-service
+  ports:
+  - port: 3001
+    targetPort: 3001
