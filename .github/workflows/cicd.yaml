@@ -7,7 +7,6 @@ on:
 
 jobs:
   build-and-deploy:
-    # runs-on: ubuntu-latest
     runs-on: [self-hosted, linux]
 
     steps:
@@ -56,29 +55,26 @@ jobs:
         with:
           version: "latest"
 
-      - name: Update Minikube context
-        run: minikube update-context
-
-      - name: Configure kubeconfig
+      - name: Deploy Services
         run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
+          # Apply configurations
+          kubectl apply -f nginx-service.yaml --validate=false
+          kubectl apply -f homepage-service.yaml --validate=false
+          kubectl apply -f orders-service.yaml --validate=false
+          kubectl apply -f payment-service.yaml --validate=false
 
-      - name: Deployment
-        run: |
-          kubectl apply -f nginx-service.yaml
-          kubectl apply -f homepage-service.yaml
-          kubectl apply -f orders-service.yaml
-          kubectl apply -f payment-service.yaml
-
-      - name: Force rollout restart
-        run: |
+          # Force rollout restart to pull latest images
           kubectl rollout restart deployment/nginx
           kubectl rollout restart deployment/homepage-service
           kubectl rollout restart deployment/orders-service
           kubectl rollout restart deployment/payment-service
 
-      - name: Verify deployments
+      - name: Wait for deployments
         run: |
-          kubectl get deployments
-          kubectl get pods
+          kubectl rollout status deployment/nginx
+          kubectl rollout status deployment/homepage-service
+          kubectl rollout status deployment/orders-service
+          kubectl rollout status deployment/payment-service
+
+      - name: Get Service URL
+        run: minikube service nginx
