@@ -6,9 +6,11 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  build-images:
     runs-on: [self-hosted, linux]
-
+    strategy:
+      matrix:
+        service: ["nginx", "homepage", "orders", "payment"]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -22,33 +24,21 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Nginx Image
+      - name: Build and Push Image
         uses: docker/build-push-action@v4
         with:
-          context: ./nginx
+          context: ./${{ matrix.service }}
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/web-nginx:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/web-${{ matrix.service }}:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/web-${{ matrix.service }}:latest
+          cache-to: type=inline
 
-      - name: Build and Push Homepage Image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./homepage
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/web-homepage:latest
-
-      - name: Build and Push Orders Image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./orders
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/web-orders:latest
-
-      - name: Build and Push Payment Image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./payment
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/web-payment:latest
+  deploy-services:
+    needs: build-images
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
@@ -57,17 +47,14 @@ jobs:
 
       - name: Deploy Services
         run: |
-          # Apply configurations
+          kubectl delete all --all
+
+          sleep 10
+
           kubectl apply -f nginx-service.yaml --validate=false
           kubectl apply -f homepage-service.yaml --validate=false
           kubectl apply -f orders-service.yaml --validate=false
           kubectl apply -f payment-service.yaml --validate=false
-
-          # Force rollout restart to pull latest images
-          kubectl rollout restart deployment/nginx
-          kubectl rollout restart deployment/homepage-service
-          kubectl rollout restart deployment/orders-service
-          kubectl rollout restart deployment/payment-service
 
       - name: Wait for deployments
         run: |
