@@ -56,6 +56,9 @@ jobs:
         with:
           version: "latest"
 
+      - name: Update Minikube context
+        run: minikube update-context
+
       - name: Configure kubeconfig
         run: |
           mkdir -p ~/.kube
