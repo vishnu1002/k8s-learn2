@@ -23,33 +23,33 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Build and Push Nginx Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./nginx
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/web-nginx:latest
+
       - name: Build and Push Homepage Image
         uses: docker/build-push-action@v4
         with:
           context: ./homepage
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/homepage:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/web-homepage:latest
 
       - name: Build and Push Orders Image
         uses: docker/build-push-action@v4
         with:
           context: ./orders
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/orders:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/web-orders:latest
 
       - name: Build and Push Payment Image
         uses: docker/build-push-action@v4
         with:
           context: ./payment
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/payment:latest
-
-      - name: Build and Push Nginx Image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./nginx
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/nginx:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/web-payment:latest
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
