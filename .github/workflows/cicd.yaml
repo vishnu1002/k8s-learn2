@@ -6,11 +6,8 @@ on:
       - main
 
 jobs:
-  build-images:
+  build-and-deploy:
     runs-on: [self-hosted, linux]
-    strategy:
-      matrix:
-        service: ["nginx", "homepage", "orders", "payment"]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -24,21 +21,41 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Image
+      - name: Build & Push Nginx Image
         uses: docker/build-push-action@v4
         with:
-          context: ./${{ matrix.service }}
+          context: ./nginx
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/web-${{ matrix.service }}:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/web-${{ matrix.service }}:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/web-nginx:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/web-nginx:latest
           cache-to: type=inline
 
-  deploy-services:
-    needs: build-images
-    runs-on: [self-hosted, linux]
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Build & Push Homepage Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./homepage
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/web-homepage:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/web-homepage:latest
+          cache-to: type=inline
+
+      - name: Build & Push Orders Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./orders
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/web-orders:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/web-orders:latest
+          cache-to: type=inline
+
+      - name: Build & Push Payment Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./payment
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/web-payment:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/web-payment:latest
+          cache-to: type=inline
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
@@ -48,20 +65,8 @@ jobs:
       - name: Deploy Services
         run: |
           kubectl delete all --all
-
           sleep 10
-
-          kubectl apply -f nginx-service.yaml --validate=false
-          kubectl apply -f homepage-service.yaml --validate=false
-          kubectl apply -f orders-service.yaml --validate=false
-          kubectl apply -f payment-service.yaml --validate=false
-
-      - name: Wait for deployments
-        run: |
-          kubectl rollout status deployment/nginx
-          kubectl rollout status deployment/homepage-service
-          kubectl rollout status deployment/orders-service
-          kubectl rollout status deployment/payment-service
-
-      - name: Get Service URL
-        run: minikube service nginx
+          kubectl apply -f nginx-service.yaml
+          kubectl apply -f homepage-service.yaml
+          kubectl apply -f orders-service.yaml
+          kubectl apply -f payment-service.yaml
