@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: vishnu1001/web-nginx
+          image: vishnu1001/web-nginx:latest
           imagePullPolicy: Always
           resources:
             limits:

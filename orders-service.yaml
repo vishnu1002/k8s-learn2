@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: orders-service
-          image: vishnu1001/web-orders
+          image: vishnu1001/web-orders:latest
           imagePullPolicy: Always
           resources:
             limits:

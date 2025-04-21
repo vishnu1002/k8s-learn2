@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: homepage-service
-          image: vishnu1001/web-homepage
+          image: vishnu1001/web-homepage:latest
           imagePullPolicy: Always
           resources:
             limits:

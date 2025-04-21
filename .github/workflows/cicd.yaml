@@ -61,9 +61,14 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
 
-      - name: Deploy to Kubernetes
+      - name: Force rollout restart
         run: |
-          kubectl apply -f homepage-service.yaml
-          kubectl apply -f orders-service.yaml
-          kubectl apply -f payment-service.yaml
-          kubectl apply -f nginx-service.yaml
+          kubectl rollout restart deployment/homepage-service
+          kubectl rollout restart deployment/orders-service
+          kubectl rollout restart deployment/payment-service
+          kubectl rollout restart deployment/nginx
+
+      - name: Verify deployments
+        run: |
+          kubectl get deployments
+          kubectl get pods

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: payment-service
-          image: vishnu1001/web-payment
+          image: vishnu1001/web-payment:latest
           imagePullPolicy: Always
           resources:
             limits:
