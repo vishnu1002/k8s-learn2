@@ -64,9 +64,21 @@ jobs:
 
       - name: Deploy Services
         run: |
-          kubectl delete all --all
-          sleep 10
-          kubectl apply -f nginx-service.yaml
-          kubectl apply -f homepage-service.yaml
-          kubectl apply -f orders-service.yaml
-          kubectl apply -f payment-service.yaml
+          # Apply configurations if they don't exist
+          kubectl apply -f nginx-service.yaml --validate=false
+          kubectl apply -f homepage-service.yaml --validate=false
+          kubectl apply -f orders-service.yaml --validate=false
+          kubectl apply -f payment-service.yaml --validate=false
+
+          # Force rollout restart to pull latest images
+          kubectl rollout restart deployment/nginx
+          kubectl rollout restart deployment/homepage-service
+          kubectl rollout restart deployment/orders-service
+          kubectl rollout restart deployment/payment-service
+
+      - name: Wait for deployments
+        run: |
+          kubectl rollout status deployment/nginx
+          kubectl rollout status deployment/homepage-service
+          kubectl rollout status deployment/orders-service
+          kubectl rollout status deployment/payment-service
