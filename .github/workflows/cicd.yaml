@@ -5,14 +5,15 @@ on:
     branches:
       - main
     paths:
-      - "nginx/**"
-      - "homepage/**"
-      - "orders/**"
-      - "payment/**"
-      - "nginx-service-chart/**"
-      - "homepage-service-chart/**"
-      - "orders-service-chart/**"
-      - "payment-service-chart/**"
+      - ".github/workflows/cicd.yaml"
+      - "src/nginx/**"
+      - "src/homepage/**"
+      - "src/orders/**"
+      - "src/payment/**"
+      - "helm/nginx-service-chart/**"
+      - "helm/homepage-service-chart/**"
+      - "helm/orders-service-chart/**"
+      - "helm/payment-service-chart/**"
 
 jobs:
   build-and-deploy:
@@ -32,15 +33,16 @@ jobs:
 
       - name: Build and Push Images
         run: |
-          # Build and push all images in parallel
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-nginx:latest ./nginx
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-homepage:latest ./homepage
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-orders:latest ./orders
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-payment:latest ./payment
-
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-nginx:latest ./src/nginx
           docker push ${{ secrets.DOCKER_USERNAME }}/web-nginx:latest
+
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-homepage:latest ./src/homepage
           docker push ${{ secrets.DOCKER_USERNAME }}/web-homepage:latest
+
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-orders:latest ./src/orders
           docker push ${{ secrets.DOCKER_USERNAME }}/web-orders:latest
+
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-payment:latest ./src/payment
           docker push ${{ secrets.DOCKER_USERNAME }}/web-payment:latest
 
       - name: Set up kubectl
@@ -52,29 +54,26 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: "latest"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update Deployments with Helm
         run: |
-          # Update nginx service
-          helm upgrade --install nginx-service ./nginx-service-chart \
+          helm upgrade --install nginx-service ./helm/nginx-service-chart \
             --set image.name=${{ secrets.DOCKER_USERNAME }}/web-nginx \
             --set image.tag=latest \
             --atomic
 
-          # Update homepage service
-          helm upgrade --install homepage-service ./homepage-service-chart \
+          helm upgrade --install homepage-service ./helm/homepage-service-chart \
             --set image.name=${{ secrets.DOCKER_USERNAME }}/web-homepage \
             --set image.tag=latest \
             --atomic
 
-          # Update orders service
-          helm upgrade --install orders-service ./orders-service-chart \
+          helm upgrade --install orders-service ./helm/orders-service-chart \
             --set image.name=${{ secrets.DOCKER_USERNAME }}/web-orders \
             --set image.tag=latest \
             --atomic
 
-          # Update payment service
-          helm upgrade --install payment-service ./payment-service-chart \
+          helm upgrade --install payment-service ./helm/payment-service-chart \
             --set image.name=${{ secrets.DOCKER_USERNAME }}/web-payment \
             --set image.tag=latest \
             --atomic
@@ -82,4 +81,4 @@ jobs:
       - name: Verify Deployments
         run: |
           helm list
-          kubectl get pods
+          kubectl get all
