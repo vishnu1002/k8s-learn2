@@ -1,3 +1,5 @@
 image:
-  name: nginx
+  name: vishnu1001/web-nginx
   tag: latest
+
+namespace: default
