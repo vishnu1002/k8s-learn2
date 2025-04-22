@@ -1,0 +1,7 @@
+appName: homepage-service
+
+namespace: default
+
+image:
+  name: vishnu1001/web-homepage
+  tag: latest

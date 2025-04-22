@@ -1,0 +1,5 @@
+appName: payment-service
+namespace: default
+image:
+  name: vishnu1001/web-payment
+  tag: latest

@@ -5,15 +5,14 @@ on:
     branches:
       - main
     paths:
-      - ".github/workflows/cicd.yaml"
       - "nginx/**"
       - "homepage/**"
       - "orders/**"
       - "payment/**"
-      - "nginx-service.yaml"
-      - "homepage-service.yaml"
-      - "orders-service.yaml"
-      - "payment-service.yaml"
+      - "nginx-service-chart/**"
+      - "homepage-service-chart/**"
+      - "orders-service-chart/**"
+      - "payment-service-chart/**"
 
 jobs:
   build-and-deploy:
@@ -31,64 +30,56 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build & Push Nginx Image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./nginx
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/web-nginx:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/web-nginx:latest
-          cache-to: type=inline
+      - name: Build and Push Images
+        run: |
+          # Build and push all images in parallel
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-nginx:latest ./nginx
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-homepage:latest ./homepage
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-orders:latest ./orders
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/web-payment:latest ./payment
 
-      - name: Build & Push Homepage Image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./homepage
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/web-homepage:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/web-homepage:latest
-          cache-to: type=inline
-
-      - name: Build & Push Orders Image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./orders
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/web-orders:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/web-orders:latest
-          cache-to: type=inline
-
-      - name: Build & Push Payment Image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./payment
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/web-payment:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/web-payment:latest
-          cache-to: type=inline
+          docker push ${{ secrets.DOCKER_USERNAME }}/web-nginx:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/web-homepage:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/web-orders:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/web-payment:latest
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: "latest"
 
-      - name: Deploy Services
-        run: |
-          # Apply configurations if they don't exist
-          kubectl apply -f nginx-service.yaml --validate=false
-          kubectl apply -f homepage-service.yaml --validate=false
-          kubectl apply -f orders-service.yaml --validate=false
-          kubectl apply -f payment-service.yaml --validate=false
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: "latest"
 
-          # Force rollout restart to pull latest images
-          kubectl rollout restart deployment/nginx
-          kubectl rollout restart deployment/homepage-service
-          kubectl rollout restart deployment/orders-service
-          kubectl rollout restart deployment/payment-service
-
-      - name: Wait for deployments
+      - name: Update Deployments with Helm
         run: |
-          kubectl rollout status deployment/nginx
-          kubectl rollout status deployment/homepage-service
-          kubectl rollout status deployment/orders-service
-          kubectl rollout status deployment/payment-service
+          # Update nginx service
+          helm upgrade --install nginx-service ./nginx-service-chart \
+            --set image.name=${{ secrets.DOCKER_USERNAME }}/web-nginx \
+            --set image.tag=latest \
+            --atomic
+
+          # Update homepage service
+          helm upgrade --install homepage-service ./homepage-service-chart \
+            --set image.name=${{ secrets.DOCKER_USERNAME }}/web-homepage \
+            --set image.tag=latest \
+            --atomic
+
+          # Update orders service
+          helm upgrade --install orders-service ./orders-service-chart \
+            --set image.name=${{ secrets.DOCKER_USERNAME }}/web-orders \
+            --set image.tag=latest \
+            --atomic
+
+          # Update payment service
+          helm upgrade --install payment-service ./payment-service-chart \
+            --set image.name=${{ secrets.DOCKER_USERNAME }}/web-payment \
+            --set image.tag=latest \
+            --atomic
+
+      - name: Verify Deployments
+        run: |
+          helm list
+          kubectl get pods
