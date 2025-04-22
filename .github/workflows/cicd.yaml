@@ -54,30 +54,27 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: "latest"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy nginx-service
         run: |
           helm upgrade --install nginx-service ./helm/nginx-service-chart \
-            --set image.name="${{ secrets.DOCKER_USERNAME }}/web-nginx" \
-            --atomic
+            --set image.name="${{ secrets.DOCKER_USERNAME }}/web-nginx"
 
       - name: Deploy homepage-service
         run: |
           helm upgrade --install homepage-service ./helm/homepage-service-chart \
-            --set image.name="${{ secrets.DOCKER_USERNAME }}/web-homepage" \
-            --atomic
+            --set image.name="${{ secrets.DOCKER_USERNAME }}/web-homepage"
 
       - name: Deploy orders-service
         run: |
           helm upgrade --install orders-service ./helm/orders-service-chart \
-            --set image.name="${{ secrets.DOCKER_USERNAME }}/web-orders" \
-            --atomic
+            --set image.name="${{ secrets.DOCKER_USERNAME }}/web-orders"
 
       - name: Deploy payment-service
         run: |
           helm upgrade --install payment-service ./helm/payment-service-chart \
-            --set image.name="${{ secrets.DOCKER_USERNAME }}/web-payment" \
-            --atomic
+            --set image.name="${{ secrets.DOCKER_USERNAME }}/web-payment"
 
       - name: Verify Deployments
         run: |
