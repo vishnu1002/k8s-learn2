@@ -60,22 +60,18 @@ jobs:
         run: |
           helm upgrade --install nginx-service ./helm/nginx-service-chart \
             --set image.name=${{ secrets.DOCKER_USERNAME }}/web-nginx \
-            --set image.tag=latest \
             --atomic
 
           helm upgrade --install homepage-service ./helm/homepage-service-chart \
             --set image.name=${{ secrets.DOCKER_USERNAME }}/web-homepage \
-            --set image.tag=latest \
             --atomic
 
           helm upgrade --install orders-service ./helm/orders-service-chart \
             --set image.name=${{ secrets.DOCKER_USERNAME }}/web-orders \
-            --set image.tag=latest \
             --atomic
 
           helm upgrade --install payment-service ./helm/payment-service-chart \
             --set image.name=${{ secrets.DOCKER_USERNAME }}/web-payment \
-            --set image.tag=latest \
             --atomic
 
       - name: Verify Deployments
